@@ -23,15 +23,30 @@ void forward() {
     setMotorDirection(LEFT_MOTOR, MOTOR_DIR_FORWARD);
     setMotorDirection(RIGHT_MOTOR, MOTOR_DIR_FORWARD);
     setMotorSpeed(BOTH_MOTORS, fastSpeed);
-}
 
-/* Stops robot forward: both motors disabled */
-void stop() {
-    disableMotor(BOTH_MOTORS);
 }
+/* Moves robot backward: both motors backward same speed */
 void backward() {
     enableMotor(BOTH_MOTORS);
     setMotorDirection(LEFT_MOTOR, MOTOR_DIR_BACKWARD);
     setMotorDirection(RIGHT_MOTOR, MOTOR_DIR_BACKWARD);
     setMotorSpeed(BOTH_MOTORS, lowSpeed);
+}
+void spinInPlaceCCW() {
+    enableMotor(BOTH_MOTORS);
+    setMotorDirection(LEFT_MOTOR, MOTOR_DIR_BACKWARD);
+    setMotorDirection(RIGHT_MOTOR, MOTOR_DIR_FORWARD);
+    setMotorSpeed(RIGHT_MOTOR, lowSpeed);
+    setMotorSpeed(LEFT_MOTOR, fastSpeed);
+}
+void spinInPlaceCW() {
+    enableMotor(BOTH_MOTORS);
+    setMotorDirection(LEFT_MOTOR, MOTOR_DIR_FORWARD);
+    setMotorDirection(RIGHT_MOTOR, MOTOR_DIR_BACKWARD);
+    setMotorSpeed(RIGHT_MOTOR, fastSpeed);
+    setMotorSpeed(LEFT_MOTOR, lowSpeed);
+}
+/* Stops robot forward: both motors disabled */
+void stop() {
+    disableMotor(BOTH_MOTORS);
 }

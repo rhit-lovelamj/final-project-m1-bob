@@ -129,5 +129,13 @@ void loop() {
       else if (ps2x.Button(PSB_CROSS)) {
       Serial.println("CROSS button pushed");
       stop();
+      }
+      else if (ps2x.Button(PSB_CIRCLE)) {
+      Serial.println("CROSS button pushed");
+      spinInPlaceCCW();
+      }
+      else if (ps2x.Button(PSB_SQUARE)) {
+      Serial.println("CROSS button pushed");
+      spinInPlaceCW();
     }
   }
