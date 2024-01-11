@@ -122,7 +122,11 @@ void loop() {
     if (ps2x.Button(PSB_PAD_UP)) {
       Serial.println("PAD UP button pushed ");
       forward();
-    } else if (ps2x.Button(PSB_CROSS)) {
+    } else if (ps2x.Button(PSB_PAD_DOWN)) {
+      Serial.println("CROSS button pushed");
+      backward();
+    }
+      else if (ps2x.Button(PSB_CROSS)) {
       Serial.println("CROSS button pushed");
       stop();
     }

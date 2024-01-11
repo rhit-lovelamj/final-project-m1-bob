@@ -29,3 +29,9 @@ void forward() {
 void stop() {
     disableMotor(BOTH_MOTORS);
 }
+void backward() {
+    enableMotor(BOTH_MOTORS);
+    setMotorDirection(LEFT_MOTOR, MOTOR_DIR_BACKWARD);
+    setMotorDirection(RIGHT_MOTOR, MOTOR_DIR_BACKWARD);
+    setMotorSpeed(BOTH_MOTORS, lowSpeed);
+}
