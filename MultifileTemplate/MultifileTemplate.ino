@@ -46,13 +46,18 @@ enum RemoteMode {
 RemoteMode CurrentRemoteMode = PLAYSTATION;
 
 // Tuning Parameters
-const uint16_t lowSpeed = 15;
-const uint16_t fastSpeed = 30;
+const uint16_t lowSpeed = 30;
+const uint16_t fastSpeed = 45;
+
+Servo myservo; 
 
 void setup() {
   Serial.begin(57600);
   Serial.print("Starting up Robot code...... ");
+  // Serial1.begin(9600);
+  // if (Serial1.available() > 0);
 
+  myservo.attach(SRV_0); // attaches the servo on Port 1, pin 5 to the servo object
   // Run setup code
   setupRSLK();
 
@@ -123,7 +128,7 @@ void loop() {
       Serial.println("PAD UP button pushed ");
       forward();
     } else if (ps2x.Button(PSB_PAD_DOWN)) {
-      Serial.println("CROSS button pushed");
+      Serial.println("PAD DOWN button pushed");
       backward();
     }
       else if (ps2x.Button(PSB_CROSS)) {
@@ -131,11 +136,15 @@ void loop() {
       stop();
       }
       else if (ps2x.Button(PSB_CIRCLE)) {
-      Serial.println("CROSS button pushed");
+      Serial.println("CIRCLE button pushed");
       spinInPlaceCCW();
       }
       else if (ps2x.Button(PSB_SQUARE)) {
-      Serial.println("CROSS button pushed");
+      Serial.println("SQUARE button pushed");
       spinInPlaceCW();
+    }
+      else if (ps2x.Button(PSB_TRIANGLE)) {
+      Serial.println("TRIANGLE button pushed");
+      // clawGrab();
     }
   }
