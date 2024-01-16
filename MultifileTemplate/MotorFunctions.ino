@@ -46,6 +46,20 @@ void spinInPlaceCW() {
     setMotorSpeed(RIGHT_MOTOR, fastSpeed);
     setMotorSpeed(LEFT_MOTOR, lowSpeed);
 }
+void turnR(){
+    enableMotor(BOTH_MOTORS);
+    setMotorDirection(LEFT_MOTOR, MOTOR_DIR_FORWARD);
+    setMotorDirection(RIGHT_MOTOR, MOTOR_DIR_FORWARD);
+    setMotorSpeed(RIGHT_MOTOR, lowSpeed);
+    setMotorSpeed(LEFT_MOTOR, fastSpeed);
+}
+void turnL(){
+    enableMotor(BOTH_MOTORS);
+    setMotorDirection(LEFT_MOTOR, MOTOR_DIR_FORWARD);
+    setMotorDirection(RIGHT_MOTOR, MOTOR_DIR_FORWARD);
+    setMotorSpeed(RIGHT_MOTOR, fastSpeed);
+    setMotorSpeed(LEFT_MOTOR, lowSpeed);
+}
 /* Stops robot forward: both motors disabled */
 void stop() {
     disableMotor(BOTH_MOTORS);
