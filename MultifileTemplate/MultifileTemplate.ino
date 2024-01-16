@@ -26,15 +26,18 @@
 #include "SimpleRSLK.h"
 #include <Servo.h>
 #include "PS2X_lib.h"
+#include <TinyIRremote.h>
 
 // Define pin numbers for the button on the PlayStation controller
 #define PS2_DAT 14  //P1.7 <-> brown wire
 #define PS2_CMD 15  //P1.6 <-> orange wire
 #define PS2_SEL 34  //P2.3 <-> yellow wire (also called attention)
 #define PS2_CLK 35  //P6.7 <-> blue wire
+#define IR_RCV_PIN 33
 
 // Create an instance of the playstation controller object
 PS2X ps2x;
+
 
 // Define remote mode either playstation controller or IR remote controller
 enum RemoteMode {
@@ -46,10 +49,12 @@ enum RemoteMode {
 RemoteMode CurrentRemoteMode = PLAYSTATION;
 
 // Tuning Parameters
-const uint16_t lowSpeed = 30;
-const uint16_t fastSpeed = 45;
+const uint16_t lowSpeed = 20;
+const uint16_t fastSpeed = 30;
 
 Servo myservo; 
+IRreceiver irRX(IR_RCV_PIN);
+IRData IRresults;
 
 void setup() {
   Serial.begin(57600);
@@ -88,22 +93,27 @@ void setup() {
         Serial.println("Controller refusing to enter Pressures mode, may not support it. ");
       delayMicroseconds(1000 * 1000);
     }
-  } else if (CurrentRemoteMode == 1) {
-    // put start-up code for IR controller here if neccessary
+  }
+  else if (CurrentRemoteMode == 1) {
+        if (irRX.initIRReceiver()) {
+        Serial.println(F("Ready to receive NEC IR signals at pin 33"));
+    } else {
+        Serial.println("Initialization of IR receiver failed!");
+        while (1) {;}
+    }
   }
 }
 
 void loop() {
   // Read input from PlayStation controller
   ps2x.read_gamepad();
-
   // Operate the robot in remote control mode
   if (CurrentRemoteMode == 0) {
     Serial.println("Running remote control with the Playstation Controller");
     RemoteControlPlaystation();
-
-  } else if (CurrentRemoteMode == 1) {
-    // put code here to run using the IR controller if neccessary
+  } 
+  if (CurrentRemoteMode == 1) {
+    Serial.println("Running remote control with the IR Remote");
   }
 }
 
@@ -125,26 +135,41 @@ void loop() {
     // the forward() and stop() functions should be independent of
     // the control methods
     if (ps2x.Button(PSB_PAD_UP)) {
-      Serial.println("PAD UP button pushed ");
+      Serial.println("Moving forwards...");
       forward();
     } else if (ps2x.Button(PSB_PAD_DOWN)) {
-      Serial.println("PAD DOWN button pushed");
+      Serial.println("Moving backwards...");
       backward();
+    } else if (ps2x.Button(PSB_PAD_RIGHT)) {
+      Serial.println("Turning right...");
+      turnR();
+    }
+    else if (ps2x.Button(PSB_PAD_LEFT)) {
+      Serial.println("Turning left...");
+      turnL();
     }
       else if (ps2x.Button(PSB_CROSS)) {
-      Serial.println("CROSS button pushed");
+      Serial.println("Stopping...");
       stop();
       }
       else if (ps2x.Button(PSB_CIRCLE)) {
-      Serial.println("CIRCLE button pushed");
+      Serial.println("Spinning left...");
       spinInPlaceCCW();
       }
       else if (ps2x.Button(PSB_SQUARE)) {
-      Serial.println("SQUARE button pushed");
+      Serial.println("Spinning right...");
       spinInPlaceCW();
     }
-      else if (ps2x.Button(PSB_TRIANGLE)) {
-      Serial.println("TRIANGLE button pushed");
-      // clawGrab();
+      else if (ps2x.Button(PSB_R2)) {
+      Serial.println("Claw opening...");
+      clawGrab();
+    }
+      else if (ps2x.Button(PSB_L2)) {
+      Serial.println("Claw closing...");
+      clawRelease();
+    }
+    else if (ps2x.Button(PSB_START)) {
+    Serial.println("Switching to IR sensor...");
+    CurrentRemoteMode = IR_REMOTE;
     }
   }
