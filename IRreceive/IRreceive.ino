@@ -72,7 +72,7 @@ void loop() {
         Serial.print("A=0x");
         Serial.print(IRresults.address, HEX);
         Serial.print(" C=0x");
-        Serial.print(IRresults.command, HEX);
+        Serial.print(IRresults.command);
         Serial.print(" is repeat: ");
         Serial.print(IRresults.isRepeat ? "TRUE" : "FALSE");
         Serial.println();
