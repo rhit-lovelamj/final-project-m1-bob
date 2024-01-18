@@ -33,7 +33,12 @@
 #define PS2_CMD 15  //P1.6 <-> orange wire
 #define PS2_SEL 34  //P2.3 <-> yellow wire (also called attention)
 #define PS2_CLK 35  //P6.7 <-> blue wire
+
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
 #define IR_RCV_PIN 33
+IRreceiver irRX(IR_RCV_PIN);
+IRData IRresults;
 
 // Create an instance of the playstation controller object
 PS2X ps2x;
@@ -53,18 +58,27 @@ const uint16_t lowSpeed = 20;
 const uint16_t fastSpeed = 30;
 
 Servo myservo; 
-IRreceiver irRX(IR_RCV_PIN);
-IRData IRresults;
+
 
 void setup() {
   Serial.begin(57600);
   Serial.print("Starting up Robot code...... ");
   // Serial1.begin(9600);
   // if (Serial1.available() > 0);
-
+  setupRSLK();
   myservo.attach(SRV_0); // attaches the servo on Port 1, pin 5 to the servo object
   // Run setup code
-  setupRSLK();
+    /*
+     * Must be called to initialize and set up IR receiver pin.
+     *  bool initIRReceiver(bool includeRepeats = true, bool enableCallback = false,
+                void (*callbackFunction)(uint16_t , uint8_t , bool) = NULL)
+     */
+  if (irRX.initIRReceiver()) {
+    Serial.println(F("Ready to receive NEC IR signals at pin " STR(IR_RCV_PIN)));
+  } else {
+    Serial.println("Initialization of IR receiver failed!");
+    while (1) { ; }
+  }
 
   if (CurrentRemoteMode == 0) {
     // using the playstation controller
@@ -76,6 +90,7 @@ void setup() {
     bool pressures = false;
     bool rumble = false;
     int error = 1;
+
 
     while (error) {
       error = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, pressures, rumble);
@@ -95,13 +110,8 @@ void setup() {
     }
   }
   else if (CurrentRemoteMode == 1) {
-        if (irRX.initIRReceiver()) {
-        Serial.println(F("Ready to receive NEC IR signals at pin 33"));
-    } else {
-        Serial.println("Initialization of IR receiver failed!");
-        while (1) {;}
+        
     }
-  }
 }
 
 void loop() {
@@ -114,6 +124,9 @@ void loop() {
   } 
   if (CurrentRemoteMode == 1) {
     Serial.println("Running remote control with the IR Remote");
+    if (irRX.decodeIR(&IRresults)) {
+      translateIR();
+    }
   }
 }
 
@@ -125,8 +138,7 @@ void loop() {
   A few actions are programed for an example. 
 
   Button control map:
-  PAD UP button moves both motors forward
-  CROSS button stops motors
+
   */
   void RemoteControlPlaystation() {
     // put your code here to run in remote control mode
@@ -168,8 +180,8 @@ void loop() {
       Serial.println("Claw closing...");
       clawRelease();
     }
-    else if (ps2x.Button(PSB_START)) {
-    Serial.println("Switching to IR sensor...");
-    CurrentRemoteMode = IR_REMOTE;
+      else if (ps2x.Button(PSB_START)) {
+      Serial.println("Switching to IR sensor...");
+      CurrentRemoteMode = IR_REMOTE;
     }
   }
