@@ -26,7 +26,7 @@
 #include "SimpleRSLK.h"
 #include <Servo.h>
 #include "PS2X_lib.h"
-#include <TinyIRremote.h>
+
 
 // Define pin numbers for the button on the PlayStation controller
 #define PS2_DAT 14  //P1.7 <-> brown wire
@@ -36,18 +36,16 @@
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
-#define IR_RCV_PIN 33
-IRreceiver irRX(IR_RCV_PIN);
-IRData IRresults;
+
 
 // Create an instance of the playstation controller object
 PS2X ps2x;
+const uint8_t lineColor = LIGHT_LINE;
 
 
 // Define remote mode either playstation controller or IR remote controller
 enum RemoteMode {
   PLAYSTATION,
-  IR_REMOTE,
 };
 
 // Declare and initialize the current state variable
@@ -68,17 +66,6 @@ void setup() {
   setupRSLK();
   myservo.attach(SRV_0); // attaches the servo on Port 1, pin 5 to the servo object
   // Run setup code
-    /*
-     * Must be called to initialize and set up IR receiver pin.
-     *  bool initIRReceiver(bool includeRepeats = true, bool enableCallback = false,
-                void (*callbackFunction)(uint16_t , uint8_t , bool) = NULL)
-     */
-  if (irRX.initIRReceiver()) {
-    Serial.println(F("Ready to receive NEC IR signals at pin " STR(IR_RCV_PIN)));
-  } else {
-    Serial.println("Initialization of IR receiver failed!");
-    while (1) { ; }
-  }
 
   if (CurrentRemoteMode == 0) {
     // using the playstation controller
@@ -109,11 +96,7 @@ void setup() {
       delayMicroseconds(1000 * 1000);
     }
   }
-  else if (CurrentRemoteMode == 1) {
-        
-    }
 }
-
 void loop() {
   // Read input from PlayStation controller
   ps2x.read_gamepad();
@@ -122,12 +105,6 @@ void loop() {
     Serial.println("Running remote control with the Playstation Controller");
     RemoteControlPlaystation();
   } 
-  if (CurrentRemoteMode == 1) {
-    Serial.println("Running remote control with the IR Remote");
-    if (irRX.decodeIR(&IRresults)) {
-      translateIR();
-    }
-  }
 }
 
 
@@ -142,10 +119,6 @@ void loop() {
   */
   void RemoteControlPlaystation() {
     // put your code here to run in remote control mode
-
-    // Example of receive and decode remote control command
-    // the forward() and stop() functions should be independent of
-    // the control methods
     if (ps2x.Button(PSB_PAD_UP)) {
       Serial.println("Moving forwards...");
       forward();
@@ -181,7 +154,7 @@ void loop() {
       clawRelease();
     }
       else if (ps2x.Button(PSB_START)) {
-      Serial.println("Switching to IR sensor...");
-      CurrentRemoteMode = IR_REMOTE;
+      Serial.println("Switching to Autonomous Mode");
+      // CurrentRemoteMode = ;
     }
   }
