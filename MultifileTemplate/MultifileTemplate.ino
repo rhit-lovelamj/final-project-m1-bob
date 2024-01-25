@@ -40,12 +40,15 @@
 
 // Create an instance of the playstation controller object
 PS2X ps2x;
+
 const uint8_t lineColor = LIGHT_LINE;
+bool isCalibrationComplete = false;
 
 
 // Define remote mode either playstation controller or IR remote controller
 enum RemoteMode {
   PLAYSTATION,
+  AUTOCONTROL
 };
 
 // Declare and initialize the current state variable
@@ -64,6 +67,10 @@ void setup() {
   // Serial1.begin(9600);
   // if (Serial1.available() > 0);
   setupRSLK();
+  /* Left button on Launchpad */
+  setupWaitBtn(LP_LEFT_BTN);
+  /* Red led in rgb led */
+  setupLed(RED_LED);
   myservo.attach(SRV_0); // attaches the servo on Port 1, pin 5 to the servo object
   // Run setup code
 
@@ -98,6 +105,10 @@ void setup() {
   }
 }
 void loop() {
+  if (isCalibrationComplete == false) {
+      floorCalibration();
+      isCalibrationComplete = true;
+  }
   // Read input from PlayStation controller
   ps2x.read_gamepad();
   // Operate the robot in remote control mode
@@ -105,8 +116,11 @@ void loop() {
     Serial.println("Running remote control with the Playstation Controller");
     RemoteControlPlaystation();
   } 
+  if (CurrentRemoteMode == 1) {
+    Serial.println("Running autonomously");
+    AutonomousControl();
+  } 
 }
-
 
   /* RemoteControlPlaystation() function
   This function uses a playstation controller and the PLSK libraray with
@@ -155,6 +169,20 @@ void loop() {
     }
       else if (ps2x.Button(PSB_START)) {
       Serial.println("Switching to Autonomous Mode");
-      // CurrentRemoteMode = ;
+      CurrentRemoteMode = AUTOCONTROL;
     }
+  }
+  void AutonomousControl() {
+    uint32_t linePos = getLinePosition();
+
+    if ((linePos > 0) && (linePos < 4000)) {    // turn left
+      setMotorSpeed(LEFT_MOTOR, lowSpeed);
+      setMotorSpeed(RIGHT_MOTOR, fastSpeed);
+  } else if (linePos > 5000) {                // turn right
+      setMotorSpeed(LEFT_MOTOR, fastSpeed);
+      setMotorSpeed(RIGHT_MOTOR, lowSpeed);
+  } else {                                    // go straight
+      setMotorSpeed(LEFT_MOTOR, fastSpeed);
+      setMotorSpeed(RIGHT_MOTOR, fastSpeed);
+  }
   }
