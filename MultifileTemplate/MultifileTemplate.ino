@@ -1,4 +1,3 @@
-//COMMENT TO SEE iF PUSHING/PULLING IS WORKING
 /*A multifile project code template
   A template for the Milestone 1 project code that uses multiple files
   for modularity. The compiler first loads the principal file 
@@ -35,8 +34,7 @@
 #define PS2_SEL 34  //P2.3 <-> yellow wire (also called attention)
 #define PS2_CLK 35  //P6.7 <-> blue wire
 
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
+#define START_BUTTON 18
 
 
 // Create an instance of the playstation controller object
@@ -65,12 +63,9 @@ Servo myservo;
 void setup() {
   Serial.begin(57600);
   Serial.print("Starting up Robot code...... ");
-  // Serial1.begin(9600);
-  // if (Serial1.available() > 0);
   setupRSLK();
-  /* Left button on Launchpad */
-  setupWaitBtn(LP_LEFT_BTN);
-  /* Red led in rgb led */
+      pinMode(START_BUTTON, INPUT_PULLUP);
+  setupWaitBtn(START_BUTTON);
   setupLed(RED_LED);
   myservo.attach(SRV_0); // attaches the servo on Port 1, pin 5 to the servo object
   // Run setup code
