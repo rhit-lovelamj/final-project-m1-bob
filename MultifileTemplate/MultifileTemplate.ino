@@ -1,3 +1,4 @@
+//COMMENT TO SEE iF PUSHING/PULLING IS WORKING
 /*A multifile project code template
   A template for the Milestone 1 project code that uses multiple files
   for modularity. The compiler first loads the principal file 
@@ -27,34 +28,52 @@
 #include <Servo.h>
 #include "PS2X_lib.h"
 
+
 // Define pin numbers for the button on the PlayStation controller
 #define PS2_DAT 14  //P1.7 <-> brown wire
 #define PS2_CMD 15  //P1.6 <-> orange wire
 #define PS2_SEL 34  //P2.3 <-> yellow wire (also called attention)
 #define PS2_CLK 35  //P6.7 <-> blue wire
 
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
+
 // Create an instance of the playstation controller object
 PS2X ps2x;
+
+const uint8_t lineColor = LIGHT_LINE;
+bool isCalibrationComplete = false;
+
 
 // Define remote mode either playstation controller or IR remote controller
 enum RemoteMode {
   PLAYSTATION,
-  IR_REMOTE,
+  AUTOCONTROL
 };
 
 // Declare and initialize the current state variable
 RemoteMode CurrentRemoteMode = PLAYSTATION;
 
 // Tuning Parameters
-const uint16_t lowSpeed = 15;
+const uint16_t lowSpeed = 20;
 const uint16_t fastSpeed = 30;
+
+Servo myservo; 
+
 
 void setup() {
   Serial.begin(57600);
   Serial.print("Starting up Robot code...... ");
-
-  // Run setup code
+  // Serial1.begin(9600);
+  // if (Serial1.available() > 0);
   setupRSLK();
+  /* Left button on Launchpad */
+  setupWaitBtn(LP_LEFT_BTN);
+  /* Red led in rgb led */
+  setupLed(RED_LED);
+  myservo.attach(SRV_0); // attaches the servo on Port 1, pin 5 to the servo object
+  // Run setup code
 
   if (CurrentRemoteMode == 0) {
     // using the playstation controller
@@ -66,6 +85,7 @@ void setup() {
     bool pressures = false;
     bool rumble = false;
     int error = 1;
+
 
     while (error) {
       error = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, pressures, rumble);
@@ -83,25 +103,25 @@ void setup() {
         Serial.println("Controller refusing to enter Pressures mode, may not support it. ");
       delayMicroseconds(1000 * 1000);
     }
-  } else if (CurrentRemoteMode == 1) {
-    // put start-up code for IR controller here if neccessary
   }
 }
-
 void loop() {
+  if (isCalibrationComplete == false) {
+      floorCalibration();
+      isCalibrationComplete = true;
+  }
   // Read input from PlayStation controller
   ps2x.read_gamepad();
-
   // Operate the robot in remote control mode
   if (CurrentRemoteMode == 0) {
     Serial.println("Running remote control with the Playstation Controller");
     RemoteControlPlaystation();
-
-  } else if (CurrentRemoteMode == 1) {
-    // put code here to run using the IR controller if neccessary
-  }
+  } 
+  if (CurrentRemoteMode == 1) {
+    Serial.println("Running autonomously");
+    AutonomousControl();
+  } 
 }
-
 
   /* RemoteControlPlaystation() function
   This function uses a playstation controller and the PLSK libraray with
@@ -110,20 +130,60 @@ void loop() {
   A few actions are programed for an example. 
 
   Button control map:
-  PAD UP button moves both motors forward
-  CROSS button stops motors
+
   */
   void RemoteControlPlaystation() {
     // put your code here to run in remote control mode
-
-    // Example of receive and decode remote control command
-    // the forward() and stop() functions should be independent of
-    // the control methods
     if (ps2x.Button(PSB_PAD_UP)) {
-      Serial.println("PAD UP button pushed ");
+      Serial.println("Moving forwards...");
       forward();
-    } else if (ps2x.Button(PSB_CROSS)) {
-      Serial.println("CROSS button pushed");
-      stop();
+    } else if (ps2x.Button(PSB_PAD_DOWN)) {
+      Serial.println("Moving backwards...");
+      backward();
+    } else if (ps2x.Button(PSB_PAD_RIGHT)) {
+      Serial.println("Turning right...");
+      turnR();
     }
+    else if (ps2x.Button(PSB_PAD_LEFT)) {
+      Serial.println("Turning left...");
+      turnL();
+    }
+      else if (ps2x.Button(PSB_CROSS)) {
+      Serial.println("Stopping...");
+      stop();
+      }
+      else if (ps2x.Button(PSB_CIRCLE)) {
+      Serial.println("Spinning left...");
+      spinInPlaceCCW();
+      }
+      else if (ps2x.Button(PSB_SQUARE)) {
+      Serial.println("Spinning right...");
+      spinInPlaceCW();
+    }
+      else if (ps2x.Button(PSB_R2)) {
+      Serial.println("Claw opening...");
+      clawGrab();
+    }
+      else if (ps2x.Button(PSB_L2)) {
+      Serial.println("Claw closing...");
+      clawRelease();
+    }
+      else if (ps2x.Button(PSB_START)) {
+      Serial.println("Switching to Autonomous Mode");
+      CurrentRemoteMode = AUTOCONTROL;
+    }
+  }
+  void AutonomousControl() {
+    uint32_t linePos = getLinePosition();
+
+    if ((linePos > 0) && (linePos < 4000)) {    // turn left
+      setMotorSpeed(LEFT_MOTOR, lowSpeed);
+      setMotorSpeed(RIGHT_MOTOR, fastSpeed);
+  } else if (linePos > 5000) {                // turn right
+      setMotorSpeed(LEFT_MOTOR, fastSpeed);
+      setMotorSpeed(RIGHT_MOTOR, lowSpeed);
+  } else {                                    // go straight
+      setMotorSpeed(LEFT_MOTOR, fastSpeed);
+      setMotorSpeed(RIGHT_MOTOR, fastSpeed);
+  }
   }
