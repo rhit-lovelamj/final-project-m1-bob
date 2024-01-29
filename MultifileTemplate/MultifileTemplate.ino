@@ -1,12 +1,8 @@
-/*A multifile project code template
-  A template for the Milestone 1 project code that uses multiple files
-  for modularity. The compiler first loads the principal file 
-  (the one with the same name as the folder) and then loads 
-  the others in alphabetical order. Variables defined in an 
-  earlier file will be visible to code in a file that is loaded 
-  later, but not vice-versa. 
-
+/*
   Calls functions in files:
+  FloorCalibration.ino
+  AutonomousControl.ino
+  PSRemoteControl.ino
   MotorFunctions.ino
 
   written for the MSP432401 board
@@ -26,7 +22,6 @@
 #include "SimpleRSLK.h"
 #include <Servo.h>
 #include "PS2X_lib.h"
-
 
 // Define pin numbers for the button on the PlayStation controller
 #define PS2_DAT 14  //P1.7 <-> brown wire

@@ -5,6 +5,15 @@ an RLSK robot using to implement remote controller.
 A few actions are programed for an example. 
 
 Button control map:
+DPAD UP - Forwards
+DPAD Down - Backwards
+DPAD Right - Turn right
+DPAD Left - Turn left
+Cross - Stop
+Circle - Spin CCW
+Square - Spin CW
+Bumper R2 - Open Claw
+Bumper L2 - Close Claw
 
 */
 void RemoteControlPlaystation() {
