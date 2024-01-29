@@ -22,6 +22,7 @@
 #include "SimpleRSLK.h"
 #include <Servo.h>
 #include "PS2X_lib.h"
+#include <TinyIRremote.h>
 
 // Define pin numbers for the button on the PlayStation controller
 #define PS2_DAT 14  //P1.7 <-> brown wire
@@ -31,6 +32,23 @@
 
 #define START_BUTTON 18  //P3.0 a push button on top of the breadboard
 
+// set up pins for IR transmission and recieving
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+#define IR_RCV_PIN 3
+#define IR_TRX_PIN 33
+//initialize IR pins
+IRsender sendIR(IR_TRX_PIN);
+IRreceiver irRX(IR_RCV_PIN);
+IRData IRresults;
+IRData IRmsg;
+uint16_t IRcommand;
+int IRaddress;
+
+//photoresistor pins
+const int pResistor = A15;  //NEEDS an ANALOG Input Pin
+const int resistorDarkLED = 18;      // dummy pin, will be more LEDs later
+int value = analogRead(pResistor);
 
 // Create an instance of the playstation controller object
 PS2X ps2x;
@@ -74,11 +92,39 @@ void setup() {
 
   //run setup code
   setupRSLK();
+
   // set pushbutton on breadboard to use internal pullup resistor
   pinMode(START_BUTTON, INPUT_PULLUP);
   setupWaitBtn(START_BUTTON);
   setupLed(RED_LED);
-  myservo.attach(SRV_0);  // attaches the servo on Port 1, pin 5 to the servo object
+
+
+  if (sendIR.initIRSender()) {
+    Serial.println(F("Ready to Transmit NEC IR signals on pin " STR(IR_TRX_PIN)));
+  } else {
+    Serial.println("Initialization of IR Transmitter Failed.");
+    while (1) { ; }
+  }
+  delay(500);
+  enableTXLEDFeedback(GREEN_LED);
+  IRmsg.protocol = NEC;
+  IRmsg.address = IRaddress;
+  IRmsg.command = IRcommand;
+  IRmsg.isRepeat = false;
+  // IR Receiver
+  if (irRX.initIRReceiver()) {
+    Serial.println(F("Ready to Receiver NEC IR Signals at Pin " STR(IR_RCV_PIN)));
+  } else {
+    Serial.println("Initializaiton of IR receiver Failed.");
+    while (1) { ; }
+  }
+  delay(500);
+  enableRXLEDFeedback(BLUE_LED);
+  //photoresistor initialization
+  pinMode(resistorDarkLED, OUTPUT);
+  pinMode(pResistor, INPUT);
+  //attach servo
+  myservo.attach(SRV_0); 
   // Initialize Playstation Controller
   bool pressures = false;
   bool rumble = false;
@@ -110,6 +156,10 @@ void loop() {
 
   // Perform actions based on the current state
   executeStateActions();
+
+  //send IR messages for votive and catrina
+  votive();
+  catrina();
 }
 void updateStateMachine() {
   switch (RobotCurrentState) {
@@ -136,12 +186,12 @@ void updateStateMachine() {
 
     case AUTONOMOUS:
       Serial.print("in autonomous state........");
-      if (ps2x.Button(PSB_START)) {
+      if (ps2x.Button(PSB_SELECT)) {
         Serial.println("Switching to Manual Mode");
         // go to manual state when square button pushed
         RobotCurrentState = MANUAL;
         // reset autonomous state to start state for the next time
-        AutoCurrentState = START; 
+        AutoCurrentState = START;
       }
       break;
   }
